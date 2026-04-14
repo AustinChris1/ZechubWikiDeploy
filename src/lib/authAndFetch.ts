@@ -8,7 +8,7 @@ const owner = OWNER || "";
 const repo = REPO || "";
 const branch = BRANCH || "main";
 
-// ⚠️ Allow Octokit to exist even without token
+// ⚠️ Safe Octokit init
 const octokit = new Octokit({
   auth: GITHUB_TOKEN || undefined,
 });
@@ -22,10 +22,12 @@ function normalize(str: string): string {
 }
 
 /**
- * SAFE GITHUB CALL WRAPPER
- * Prevents build failure on Vercel
+ * SAFE GITHUB WRAPPER
  */
-async function safeGithubCall<T>(fn: () => Promise<T>, fallback: T): Promise<T> {
+async function safeGithubCall<T>(
+  fn: () => Promise<T>,
+  fallback: T
+): Promise<T> {
   try {
     return await fn();
   } catch (err) {
@@ -34,10 +36,32 @@ async function safeGithubCall<T>(fn: () => Promise<T>, fallback: T): Promise<T> 
   }
 }
 
+/**
+ * EXTRACT FILE CONTENT SAFELY
+ */
+function extractContent(data: unknown): string | null {
+  if (!data || Array.isArray(data)) return null;
+
+  if (typeof data === "object" && "content" in data) {
+    const content = (data as { content?: unknown }).content;
+
+    if (typeof content === "string") {
+      return Buffer.from(content, "base64").toString("utf-8");
+    }
+  }
+
+  return null;
+}
+
 export const getFileContentCached = unstable_cache(
   async (path: string) => {
+    if (!owner || !repo) {
+      console.warn("Missing GitHub env vars");
+      return null;
+    }
+
     return safeGithubCall(async () => {
-      // Try exact file first
+      // 1. Try direct fetch
       try {
         const res = await octokit.rest.repos.getContent({
           owner,
@@ -46,42 +70,35 @@ export const getFileContentCached = unstable_cache(
           ref: branch,
         });
 
-        // @ts-ignore
-        if (res.data?.content) {
-          return Buffer.from(res.data.content, "base64").toString("utf-8");
-        }
-      } catch (e) {
-        // ignore and fallback
+        const content = extractContent(res.data);
+        if (content) return content;
+      } catch {
+        // ignore
       }
 
-      // Fallback: fuzzy search in folder
+      // 2. Fallback fuzzy search
       const folderPath = path.split("/").slice(0, -1).join("/");
       const realFiles = await getRootCached(folderPath);
 
-      if (realFiles && realFiles.length > 0) {
-        const slugPart =
-          path.split("/").pop()?.replace(/\.md$/i, "") || "";
-        const normalizedSlug = normalize(slugPart);
+      if (!realFiles.length) return null;
 
-        for (const file of realFiles) {
-          if (
-            normalize(file) === normalizedSlug ||
-            normalize(file).includes(normalizedSlug)
-          ) {
-            const res = await octokit.rest.repos.getContent({
-              owner,
-              repo,
-              path: file,
-              ref: branch,
-            });
+      const slug = path.split("/").pop()?.replace(/\.md$/i, "") || "";
+      const normalizedSlug = normalize(slug);
 
-            // @ts-ignore
-            if (res.data?.content) {
-              return Buffer.from(res.data.content, "base64").toString(
-                "utf-8"
-              );
-            }
-          }
+      for (const file of realFiles) {
+        if (
+          normalize(file) === normalizedSlug ||
+          normalize(file).includes(normalizedSlug)
+        ) {
+          const res = await octokit.rest.repos.getContent({
+            owner,
+            repo,
+            path: file,
+            ref: branch,
+          });
+
+          const content = extractContent(res.data);
+          if (content) return content;
         }
       }
 
@@ -97,6 +114,8 @@ export const getFileContentCached = unstable_cache(
 
 export const getRootCached = unstable_cache(
   async (path: string) => {
+    if (!owner || !repo) return [];
+
     return safeGithubCall(async () => {
       const res = await octokit.rest.repos.getContent({
         owner,
@@ -106,6 +125,9 @@ export const getRootCached = unstable_cache(
       });
 
       const data = res.data;
+
+      if (!data) return [];
+
       const elements = getFiles(data);
 
       return elements.filter((item: string) =>
@@ -121,6 +143,8 @@ export const getRootCached = unstable_cache(
 );
 
 export async function getSiteFolders(path: string) {
+  if (!owner || !repo) return [];
+
   return safeGithubCall(async () => {
     const res = await octokit.rest.repos.getContent({
       owner,
@@ -129,12 +153,13 @@ export async function getSiteFolders(path: string) {
       ref: branch,
     });
 
-    const data = res.data;
-    return getFiles(data);
+    return getFiles(res.data);
   }, []);
 }
 
 export async function getRootFileName(path: string) {
+  if (!owner || !repo) return [];
+
   return safeGithubCall(async () => {
     const res = await octokit.rest.repos.getContent({
       owner,
@@ -143,9 +168,11 @@ export async function getRootFileName(path: string) {
       ref: branch,
     });
 
-    const data = res.data;
-    return getFiles(data)
+    return getFiles(res.data)
       .filter((item: string) => item.endsWith(".md"))
-      .map((item: string) => item.split("/").pop()?.replace(/\.md$/, "") || "");
+      .map(
+        (item: string) =>
+          item.split("/").pop()?.replace(/\.md$/, "") || ""
+      );
   }, []);
 }
