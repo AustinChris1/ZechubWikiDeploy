@@ -1,0 +1,115 @@
+:root {
+  --background: hsl(0 0% 100%);
+  --foreground: hsl(0 0% 0%);
+  --card: hsl(0 0% 100%);
+  --card-foreground: hsl(0 0% 0%);
+  --popover: hsl(0 0% 100%);
+  --popover-foreground: hsl(0 0% 0%);
+  --primary: hsl(180 100% 50%);
+  --primary-foreground: hsl(0 0% 0%);
+  --secondary: hsl(210 40% 96%);
+  --secondary-foreground: hsl(222 47% 4%);
+  --muted: hsl(210 40% 96%);
+  --muted-foreground: hsl(215 16% 47%);
+  --accent: hsl(270 80% 60%);
+  --accent-foreground: hsl(0 0% 0%);
+  --destructive: hsl(0 84% 60%);
+  --destructive-foreground: hsl(0 0% 0%);
+  --border: hsl(214 32% 91%);
+  --input: hsl(214 32% 91%);
+  --ring: hsl(180 100% 50%);
+  --radius: 0.75rem;
+
+  --code-bg: hsl(210 40% 96%);
+  --glow-primary: hsl(180 100% 50%);
+  --glow-secondary: hsl(158 64% 52%);
+}
+
+.dark {
+  --background: hsl(222 47% 5%);
+  --foreground: hsl(180 100% 90%);
+  --card: hsl(220 15% 18%);
+  --card-foreground: hsl(0 0% 96%);
+  --popover: hsl(222 47% 5%);
+  --popover-foreground: hsl(180 100% 90%);
+  --primary: hsl(180 100% 50%);
+  --primary-foreground: hsl(222 47% 4%);
+  --secondary: hsl(158 64% 52%);
+  --secondary-foreground: hsl(222 47% 4%);
+  --muted: hsl(222 30% 15%);
+  --muted-foreground: hsl(180 20% 65%);
+  --accent: hsl(270 80% 60%);
+  --accent-foreground: hsl(180 100% 95%);
+  --destructive: hsl(0 84% 60%);
+  --destructive-foreground: hsl(210 40% 98%);
+  --border: hsl(222 30% 18%);
+  --input: hsl(222 30% 18%);
+  --ring: hsl(180 100% 50%);
+
+  --code-bg: hsl(222 47% 8%);
+  --glow-primary: hsl(180 100% 50%);
+  --glow-secondary: hsl(158 64% 52%);
+}
+
+@theme inline {
+  --font-sans: "Inter", system-ui, -apple-system, sans-serif;
+  --font-mono: "JetBrains Mono", monospace;
+
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
+
+  --color-code-bg: var(--code-bg);
+  --color-glow-primary: var(--glow-primary);
+  --color-glow-secondary: var(--glow-secondary);
+}
+
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+  }
+  body {
+    @apply bg-background text-foreground font-sans antialiased;
+  }
+  code,
+  pre {
+    font-family: var(--font-mono);
+  }
+}
+
+@utility glow-primary {
+  box-shadow: 0 0 20px color-mix(in srgb, var(--glow-primary) 30%, transparent);
+}
+
+@utility glow-secondary {
+  box-shadow: 0 0 20px
+    color-mix(in srgb, var(--glow-secondary) 30%, transparent);
+}
+
+@utility text-gradient {
+  background: linear-gradient(135deg, var(--primary), var(--secondary));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}

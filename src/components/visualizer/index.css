@@ -1,0 +1,150 @@
+@theme {
+  /* Base colors */
+  /* --color-background: hsl(0 0% 100%); */
+  --color-foreground: hsl(0 0% 0%);
+
+  /* --color-card: hsl(0 0% 100%); */
+  --color-card-foreground: hsl(0 0% 0%);
+
+  --color-popover: hsl(0 0% 100%);
+  --color-popover-foreground: hsl(0 0% 0%);
+
+  --color-primary: hsl(43 89% 56%);
+  --color-primary-foreground: hsl(0 0% 100%);
+
+  --color-secondary: hsl(210 40% 96%);
+  --color-secondary-foreground: hsl(222 47% 4%);
+
+  --color-muted: hsl(210 40% 96%);
+  --color-muted-foreground: hsl(215 16% 47%);
+
+  --color-accent: hsl(210 40% 96%);
+  --color-accent-foreground: hsl(222 47% 4%);
+
+  --color-destructive: hsl(0 84% 60%);
+  --color-destructive-foreground: hsl(210 40% 98%);
+
+  --color-border: hsl(214 32% 91%);
+  --color-input: hsl(214 32% 91%);
+  --color-ring: hsl(43 89% 56%);
+
+  --radius: 0.75rem;
+
+  /* Zcash specific colors */
+  --color-zcash-gold: hsl(43 89% 56%);
+  --color-zcash-gold-glow: hsl(43 100% 65%);
+  --color-zcash-dark: hsl(0 0% 0%);
+  --color-zcash-dark-lighter: hsl(0 0% 10%);
+
+  /* Pool colors */
+  --color-pool-transparent: hsl(200 80% 50%);
+  --color-pool-transparent-glow: hsl(200 100% 60%);
+  --color-pool-sapling: hsl(160 70% 45%);
+  --color-pool-sapling-glow: hsl(160 100% 55%);
+  --color-pool-orchard: hsl(280 70% 55%);
+  --color-pool-orchard-glow: hsl(280 100% 65%);
+
+  /* Sidebar */
+  --color-sidebar: hsl(220 18% 10%);
+  --color-sidebar-foreground: hsl(45 100% 96%);
+  --color-sidebar-primary: hsl(43 89% 56%);
+  --color-sidebar-primary-foreground: hsl(220 20% 7%);
+  --color-sidebar-accent: hsl(220 15% 18%);
+  --color-sidebar-accent-foreground: hsl(45 100% 96%);
+  --color-sidebar-border: hsl(220 15% 20%);
+  --color-sidebar-ring: hsl(43 89% 56%);
+
+  /* Typography */
+  --font-sans: "Inter", system-ui, sans-serif;
+  --font-mono: "JetBrains Mono", monospace;
+}
+
+/* Dark mode overrides */
+@layer base {
+  .dark {
+    /* --color-background: hsl(220 20% 7%); */
+    --color-foreground: hsl(45 100% 96%);
+
+    /* --color-card: hsl(220 18% 10%); */
+    --color-card-foreground: hsl(45 100% 96%);
+
+    --color-popover: hsl(220 18% 10%);
+    --color-popover-foreground: hsl(45 100% 96%);
+
+    --color-primary: hsl(43 89% 56%);
+    --color-primary-foreground: hsl(220 20% 7%);
+
+    --color-secondary: hsl(220 15% 15%);
+    --color-secondary-foreground: hsl(45 100% 96%);
+
+    --color-muted: hsl(220 15% 18%);
+    --color-muted-foreground: hsl(220 10% 60%);
+
+    --color-accent: hsl(43 89% 56%);
+    --color-accent-foreground: hsl(220 20% 7%);
+
+    --color-destructive: hsl(0 72% 51%);
+    --color-destructive-foreground: hsl(45 100% 96%);
+
+    --color-border: hsl(220 15% 20%);
+    --color-input: hsl(220 15% 15%);
+    --color-ring: hsl(43 89% 56%);
+
+    --color-sidebar: hsl(220 18% 10%);
+    --color-sidebar-foreground: hsl(45 100% 96%);
+    --color-sidebar-primary: hsl(43 89% 56%);
+    --color-sidebar-primary-foreground: hsl(220 20% 7%);
+    --color-sidebar-accent: hsl(220 15% 18%);
+    --color-sidebar-accent-foreground: hsl(45 100% 96%);
+    --color-sidebar-border: hsl(220 15% 20%);
+    --color-sidebar-ring: hsl(43 89% 56%);
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply font-sans antialiased;
+  }
+}
+
+@utility glow-gold {
+  box-shadow:
+    0 0 30px color-mix(in srgb, var(--color-zcash-gold) 30%, transparent),
+    0 0 60px color-mix(in srgb, var(--color-zcash-gold) 15%, transparent);
+}
+
+@utility glow-transparent {
+  box-shadow:
+    0 0 20px color-mix(in srgb, var(--color-pool-transparent) 40%, transparent),
+    0 0 40px color-mix(in srgb, var(--color-pool-transparent) 20%, transparent);
+}
+
+@utility glow-sapling {
+  box-shadow:
+    0 0 20px color-mix(in srgb, var(--color-pool-sapling) 40%, transparent),
+    0 0 40px color-mix(in srgb, var(--color-pool-sapling) 20%, transparent);
+}
+
+@utility glow-orchard {
+  box-shadow:
+    0 0 20px color-mix(in srgb, var(--color-pool-orchard) 40%, transparent),
+    0 0 40px color-mix(in srgb, var(--color-pool-orchard) 20%, transparent);
+}
+
+@utility glass {
+  background: color-mix(in srgb, var(--color-card) 60%, transparent);
+  backdrop-filter: blur(12px);
+  border: 1px solid color-mix(in srgb, var(--color-border) 50%, transparent);
+}
+
+@utility gradient-gold {
+  background: linear-gradient(
+    135deg,
+    var(--color-zcash-gold) 0%,
+    var(--color-zcash-gold-glow) 100%
+  );
+}
