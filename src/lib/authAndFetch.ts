@@ -4,115 +4,148 @@ import { Octokit } from "octokit";
 
 const { GITHUB_TOKEN, OWNER, REPO, BRANCH } = process.env;
 
-const authUser = GITHUB_TOKEN;
 const owner = OWNER || "";
 const repo = REPO || "";
+const branch = BRANCH || "main";
 
-const octokit = new Octokit({ auth: authUser });
+// ⚠️ Allow Octokit to exist even without token
+const octokit = new Octokit({
+  auth: GITHUB_TOKEN || undefined,
+});
 
 // Normalize string for fuzzy matching
 function normalize(str: string): string {
-  return str.replace(/\.md$/i, "").toLowerCase().replace(/[-_ ]+/g, "");
+  return str
+    .replace(/\.md$/i, "")
+    .toLowerCase()
+    .replace(/[-_ ]+/g, "");
+}
+
+/**
+ * SAFE GITHUB CALL WRAPPER
+ * Prevents build failure on Vercel
+ */
+async function safeGithubCall<T>(fn: () => Promise<T>, fallback: T): Promise<T> {
+  try {
+    return await fn();
+  } catch (err) {
+    console.error("[GitHub API Error]:", err);
+    return fallback;
+  }
 }
 
 export const getFileContentCached = unstable_cache(
   async (path: string) => {
-    try {
-      // Try the exact transformed path first
+    return safeGithubCall(async () => {
+      // Try exact file first
       try {
         const res = await octokit.rest.repos.getContent({
           owner,
           repo,
           path,
-          ref: BRANCH,
+          ref: branch,
         });
+
         // @ts-ignore
-        return atob(res.data?.content || "");
-      } catch {
-        // Direct path failed → fuzzy fallback
+        if (res.data?.content) {
+          return Buffer.from(res.data.content, "base64").toString("utf-8");
+        }
+      } catch (e) {
+        // ignore and fallback
       }
 
-      // Fuzzy fallback: list real files in the folder and match by slug
+      // Fallback: fuzzy search in folder
       const folderPath = path.split("/").slice(0, -1).join("/");
       const realFiles = await getRootCached(folderPath);
 
       if (realFiles && realFiles.length > 0) {
-        const slugPart = path.split("/").pop()?.replace(/\.md$/i, "") || "";
+        const slugPart =
+          path.split("/").pop()?.replace(/\.md$/i, "") || "";
         const normalizedSlug = normalize(slugPart);
 
         for (const file of realFiles) {
-          if (normalize(file) === normalizedSlug || normalize(file).includes(normalizedSlug)) {
+          if (
+            normalize(file) === normalizedSlug ||
+            normalize(file).includes(normalizedSlug)
+          ) {
             const res = await octokit.rest.repos.getContent({
               owner,
               repo,
               path: file,
-              ref: BRANCH,
+              ref: branch,
             });
+
             // @ts-ignore
-            return atob(res.data?.content || "");
+            if (res.data?.content) {
+              return Buffer.from(res.data.content, "base64").toString(
+                "utf-8"
+              );
+            }
           }
         }
       }
 
       return null;
-    } catch {
-      return null;
-    }
+    }, null);
   },
   ["github-file-content-cache"],
-  { 
-    revalidate: false,          // ← FIXED: This is what Next.js accepts
-    tags: ["github-content"] 
+  {
+    revalidate: false,
+    tags: ["github-content"],
   }
 );
 
 export const getRootCached = unstable_cache(
   async (path: string) => {
-    const res = await octokit.rest.repos.getContent({
-      owner,
-      repo,
-      path: transformUri(path).replace("/Site", "/site"),
-      ref: BRANCH,
-    });
-    const data = res.data;
-    const elements = getFiles(data);
-    return elements.filter((item: string) => item.endsWith(".md"));
+    return safeGithubCall(async () => {
+      const res = await octokit.rest.repos.getContent({
+        owner,
+        repo,
+        path: transformUri(path).replace("/Site", "/site"),
+        ref: branch,
+      });
+
+      const data = res.data;
+      const elements = getFiles(data);
+
+      return elements.filter((item: string) =>
+        item.endsWith(".md")
+      );
+    }, []);
   },
   ["github-root-md-cache"],
-  { 
-    revalidate: 30, 
-    tags: ["github-content"] 
+  {
+    revalidate: 30,
+    tags: ["github-content"],
   }
 );
 
 export async function getSiteFolders(path: string) {
-  try {
-    const res = await octokit.rest.repos.getContent({ owner, repo, path, ref: BRANCH });
+  return safeGithubCall(async () => {
+    const res = await octokit.rest.repos.getContent({
+      owner,
+      repo,
+      path,
+      ref: branch,
+    });
+
     const data = res.data;
-    const elements = getFiles(data);
-    return elements;
-  } catch {
-    return [];
-  }
+    return getFiles(data);
+  }, []);
 }
 
 export async function getRootFileName(path: string) {
-  try {
+  return safeGithubCall(async () => {
     const res = await octokit.rest.repos.getContent({
       owner,
       repo,
       path: transformUri(path).replace("/Site", "/site"),
-      ref: BRANCH,
+      ref: branch,
     });
+
     const data = res.data;
-    const elements = getFiles(data);
-    return elements
+    return getFiles(data)
       .filter((item: string) => item.endsWith(".md"))
-      .map((item: string) => {
-        const fileName = item.split("/").pop() || "";
-        return fileName.replace(/\.md$/, "");
-      });
-  } catch {
-    return [];
-  }
+      .map((item: string) => item.split("/").pop()?.replace(/\.md$/, "") || "");
+  }, []);
 }
