@@ -72,12 +72,13 @@ export default async function Page() {
     dict.pages?.wallets?.noData ||
     "Wallet data is currently unavailable.";
 
-  let walletsParsed = [];
-  try {
-    walletsParsed = parseMarkdown(String(content));
-  } catch (e) {
-    console.error("Markdown parse failed:", e);
-  }
+let walletsParsed: any[] = [];
+
+try {
+  walletsParsed = parseMarkdown(String(content));
+} catch (e) {
+  console.error("Markdown parse failed:", e);
+}
 
   return (
     <main>
