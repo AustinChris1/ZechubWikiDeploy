@@ -1,4 +1,5 @@
 import ToolTabs from './ToolTabs'
+export const dynamic = "force-dynamic";
 
 export const metadata = {
   title: 'Zcash Developer Tools | ZecHub',

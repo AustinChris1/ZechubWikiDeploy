@@ -2,6 +2,7 @@
 
 import type { Metadata } from "next";
 import ZipSimulator from "@/components/ZipSimulator/ZipSimulator";
+export const dynamic = "force-dynamic";
 
 export const metadata: Metadata = {
   title: "ZIP Simulator — ZecHub",
